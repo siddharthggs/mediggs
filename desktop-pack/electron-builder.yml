@@ -1,0 +1,30 @@
+// FILE: desktop-pack/electron-builder.yml
+/// ANCHOR: ElectronBuilderConfig
+appId: com.mediclone.pharma.erp
+productName: Mediclone Pharma ERP
+directories:
+  output: dist
+  buildResources: desktop-pack/resources
+files:
+  - dist_electron/**
+  - dist_renderer/**
+  - package.json
+  - prisma/schema.prisma
+  - prisma/migrations/**
+extraResources:
+  - from: prisma
+    to: prisma
+    filter:
+      - "**/*"
+win:
+  target:
+    - nsis
+  artifactName: "Mediclone-Setup-${version}.exe"
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+
+

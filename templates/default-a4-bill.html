@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Tax Invoice - {{companyName}}</title>
+  <style type="text/css">
+    /* CSS will be injected here */
+    /* {{! Template will inject CSS here }} */
+  </style>
+  {{#if cssContent}}
+  <style type="text/css">
+    {{cssContent}}
+  </style>
+  {{/if}}
+</head>
+<body>
+  <div class="bill-container">
+    <!-- Header Section - 3 Column Layout -->
+    <div class="bill-header">
+      <!-- Column 1: Company Info -->
+      <div class="company-info">
+        {{#if logoPath}}
+        <img src="{{logoPath}}" alt="Company Logo" class="company-logo" />
+        {{/if}}
+        <div class="company-name">{{companyName}}</div>
+        <div class="company-address">{{address}}</div>
+        <div class="company-contact">
+          {{#if phone}}<span>Phone: {{phone}}</span>{{/if}}
+          {{#if email}}<span>Email: {{email}}</span>{{/if}}
+        </div>
+        <div class="company-tax">
+          {{#if gstin}}<span>GST No.: {{gstin}}</span>{{/if}}
+          {{#if fssaiNumber}}<span>FSSAI No.: {{fssaiNumber}}</span>{{/if}}
+        </div>
+        <div class="company-license">
+          {{#if dlNo1}}<span>DL No.: {{dlNo1}}</span>{{/if}}
+          {{#if dlNo2}}<span>{{dlNo2}}</span>{{/if}}
+        </div>
+        {{#if state}}<div class="company-state">State: {{state}} - {{stateCode}}</div>{{/if}}
+      </div>
+      
+      <!-- Column 2: Customer Info -->
+      <div class="customer-info">
+        {{#if customerName}}
+        <div class="customer-name">{{customerName}}</div>
+        {{#if customerAddress}}<div class="customer-address">{{customerAddress}}</div>{{/if}}
+        {{#if customerAddressLine1}}<div class="customer-address">{{customerAddressLine1}}</div>{{/if}}
+        {{#if customerAddressLine2}}<div class="customer-address">{{customerAddressLine2}}</div>{{/if}}
+        {{#if customerCity}}<div class="customer-address">{{customerCity}}{{#if customerPostalCode}}, {{customerPostalCode}}{{/if}}</div>{{/if}}
+        <div class="customer-contact">
+          {{#if customerPhone}}<span>Phone: {{customerPhone}}</span>{{/if}}
+          {{#if customerEmail}}<span>Email: {{customerEmail}}</span>{{/if}}
+        </div>
+        <div class="customer-tax">
+          {{#if customerGstin}}<span>GST No.: {{customerGstin}}</span>{{/if}}
+          {{#if customerPanNumber}}<span>PAN No.: {{customerPanNumber}}</span>{{/if}}
+        </div>
+        <div class="customer-license">
+          {{#if customerDlNo}}<span>DL No.: {{customerDlNo}}</span>{{/if}}
+          {{#if customerDlNo2}}<span>DL No. 2: {{customerDlNo2}}</span>{{/if}}
+        </div>
+        {{#if customerState}}<div class="customer-state">State: {{customerState}}{{#if customerStateCode}} - {{customerStateCode}}{{/if}}</div>{{/if}}
+        {{/if}}
+      </div>
+      
+      <!-- Column 3: Tax Invoice Info -->
+      <div class="invoice-info">
+        <div class="invoice-title">TAX INVOICE</div>
+        <div class="invoice-detail-row">
+          <span class="invoice-label">Tax Invoice No:</span>
+          <span class="invoice-value">{{billNumber}}</span>
+        </div>
+        <div class="invoice-detail-row">
+          <span class="invoice-label">Invoice Date:</span>
+          <span class="invoice-value">{{billDate}}</span>
+        </div>
+        {{#if dueDate}}
+        <div class="invoice-detail-row">
+          <span class="invoice-label">Due Date:</span>
+          <span class="invoice-value">{{dueDate}}</span>
+        </div>
+        {{/if}}
+        <div class="invoice-type-selector">
+          <div class="invoice-type {{#if isOriginal}}invoice-type-original{{else}}invoice-type-copy{{/if}}">
+            {{#if isOriginal}}ORIGINAL{{else}}COPY{{/if}}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Additional Invoice Details Section -->
+    {{#if challanNumber}}
+    <div class="invoice-details">
+      {{#if challanNumber}}
+      <div class="invoice-detail-row">
+        <span class="invoice-label">Challan No.:</span>
+        <span class="invoice-value">{{challanNumber}}</span>
+      </div>
+      {{/if}}
+      {{#if orderNumber}}
+      <div class="invoice-detail-row">
+        <span class="invoice-label">Order No.:</span>
+        <span class="invoice-value">{{orderNumber}}</span>
+      </div>
+      {{/if}}
+    </div>
+    {{/if}}
+
+    <!-- Items Table -->
+    <table class="items-table" aria-label="Invoice Items">
+      <thead>
+        <tr>
+          <th scope="col" class="col-sno">S.No</th>
+          <th scope="col" class="col-hsn">HSN</th>
+          <th scope="col" class="col-mfg">MFG</th>
+          <th scope="col" class="col-product">PRODUCT DESCRIPTION</th>
+          <th scope="col" class="col-batch">BATCH NO.</th>
+          <th scope="col" class="col-expiry">EXP</th>
+          <th scope="col" class="col-pack">PACK</th>
+          <th scope="col" class="col-mrp">MRP</th>
+          <th scope="col" class="col-rate">RATE</th>
+          <th class="col-qty">QTY</th>
+          <th class="col-free">FREE</th>
+          <th class="col-disc">DISC %</th>
+          <th class="col-taxable">TAXABLE</th>
+          <th class="col-gst">GST %</th>
+          <th class="col-cgst">CGST AMT</th>
+          <th class="col-sgst">SGST AMT</th>
+          <th class="col-amount">AMOUNT</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each lines}}
+        <tr>
+          <td class="col-sno">{{lineNumber}}</td>
+          <td class="col-hsn">{{hsnCode}}</td>
+          <td class="col-mfg">{{manufacturer}}</td>
+          <td class="col-product">{{productName}}</td>
+          <td class="col-batch">{{batchNumber}}</td>
+          <td class="col-expiry">{{expiryDate}}</td>
+          <td class="col-pack">{{packSize}}</td>
+          <td class="col-mrp">{{formatCurrency mrp}}</td>
+          <td class="col-rate">{{formatCurrency rate}}</td>
+          <td class="col-qty">{{quantity}}</td>
+          <td class="col-free">{{freeQuantity}}</td>
+          <td class="col-disc">{{discountPercent}}</td>
+          <td class="col-taxable">{{formatCurrency taxableAmount}}</td>
+          <td class="col-gst">{{taxPercent}}</td>
+          <td class="col-cgst">{{formatCurrency cgstAmount}}</td>
+          <td class="col-sgst">{{formatCurrency sgstAmount}}</td>
+          <td class="col-amount">{{formatCurrency lineTotal}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+
+    <!-- Remarks Section -->
+    {{#if remarks}}
+    <div class="remarks-section">
+      <div class="remarks-label">Remarks:</div>
+      <div class="remarks-content">{{remarks}}</div>
+    </div>
+    {{/if}}
+
+    <!-- Summary Section -->
+    <div class="summary-section">
+      <div class="summary-left">
+        <!-- Saving Information -->
+        {{#if totalSaving}}
+        <div class="saving-info">
+          <div class="saving-row">
+            <span class="saving-label">Saving %:</span>
+            <span class="saving-value">{{totalSavingPercent}}%</span>
+          </div>
+          <div class="saving-row">
+            <span class="saving-label">Saving Value:</span>
+            <span class="saving-value">{{formatCurrency totalSavingValue}}</span>
+          </div>
+        </div>
+        {{/if}}
+
+        <!-- GST Summary Table -->
+        <table class="gst-summary-table">
+          <thead>
+            <tr>
+              <th>GST %</th>
+              <th>TAXABLE</th>
+              <th>CGST %</th>
+              <th>CGST AMT</th>
+              <th>SGST %</th>
+              <th>SGST AMT</th>
+              <th>TOTAL AMT</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each gstSummary}}
+            <tr>
+              <td>{{rate}}%</td>
+              <td>{{formatCurrency taxable}}</td>
+              <td>{{cgstRate}}%</td>
+              <td>{{formatCurrency cgst}}</td>
+              <td>{{sgstRate}}%</td>
+              <td>{{formatCurrency sgst}}</td>
+              <td>{{formatCurrency total}}</td>
+            </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="summary-right">
+        <!-- Totals -->
+        <div class="totals-box">
+          <div class="total-row">
+            <span class="total-label">Gross Amount:</span>
+            <span class="total-value">{{formatCurrency subtotal}}</span>
+          </div>
+          <div class="total-row">
+            <span class="total-label">Discount:</span>
+            <span class="total-value">{{formatCurrency totalDiscount}}</span>
+          </div>
+          <div class="total-row">
+            <span class="total-label">Taxable Amount:</span>
+            <span class="total-value">{{formatCurrency taxableAmount}}</span>
+          </div>
+          <div class="total-row">
+            <span class="total-label">CGST:</span>
+            <span class="total-value">{{formatCurrency cgstTotal}}</span>
+          </div>
+          <div class="total-row">
+            <span class="total-label">SGST:</span>
+            <span class="total-value">{{formatCurrency sgstTotal}}</span>
+          </div>
+          {{#if igstTotal}}
+          <div class="total-row">
+            <span class="total-label">IGST:</span>
+            <span class="total-value">{{formatCurrency igstTotal}}</span>
+          </div>
+          {{/if}}
+          <div class="total-row">
+            <span class="total-label">Round Off:</span>
+            <span class="total-value">{{formatCurrency roundOff}}</span>
+          </div>
+          <div class="total-row total-grand">
+            <span class="total-label">Total Amount:</span>
+            <span class="total-value">{{formatCurrency totalAmount}}</span>
+          </div>
+          <div class="total-row">
+            <span class="total-label">Amount in Words:</span>
+            <span class="total-value-words">{{numberToWords totalAmount}}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Section -->
+    <div class="bill-footer">
+      <div class="declaration">
+        <strong>Declaration:</strong> We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct. No Reverse charge Is Applicable.
+      </div>
+      <div class="terms">
+        <div>E. & O. E.</div>
+        <div>Subject To Jurisdiction</div>
+      </div>
+      <div class="signature-section">
+        <div class="signature-box">
+          {{#if signaturePath}}
+          <img src="{{signaturePath}}" alt="Signature" class="signature-image" />
+          {{/if}}
+          <div class="signature-label">Authorised Signatory</div>
+          <div class="signature-company">For {{companyName}}</div>
+        </div>
+        <div class="signature-box">
+          <div class="signature-label">Receiver's Signature</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

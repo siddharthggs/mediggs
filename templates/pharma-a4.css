@@ -1,0 +1,254 @@
+/* Pharma A4 Template - Based on Real Invoice Format */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Arial', sans-serif;
+  font-size: 9pt;
+  color: #000;
+  background: #fff;
+}
+
+.bill-container {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  padding: 6mm;
+  background: #fff;
+}
+
+.bill-header {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 2px solid #000;
+  padding-bottom: 3mm;
+  margin-bottom: 4mm;
+}
+
+.company-info {
+  flex: 1;
+}
+
+.company-logo {
+  max-width: 100px;
+  max-height: 50px;
+  margin-bottom: 2mm;
+}
+
+.company-name {
+  font-size: 14pt;
+  font-weight: bold;
+  margin-bottom: 1.5mm;
+  text-transform: uppercase;
+}
+
+.company-address {
+  font-size: 8pt;
+  margin-bottom: 1mm;
+  line-height: 1.4;
+}
+
+.company-contact span,
+.company-tax span,
+.company-license span {
+  margin-right: 4mm;
+  font-size: 8pt;
+}
+
+.invoice-header-right {
+  text-align: right;
+}
+
+.invoice-title {
+  font-size: 18pt;
+  font-weight: bold;
+  margin-bottom: 3mm;
+  text-transform: uppercase;
+}
+
+.invoice-details-box {
+  border: 1px solid #000;
+  padding: 2mm;
+}
+
+.invoice-detail-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1mm;
+  font-size: 8pt;
+}
+
+.invoice-detail-item .label {
+  font-weight: bold;
+  margin-right: 2mm;
+}
+
+.buyer-section {
+  border: 1px solid #000;
+  padding: 2mm;
+  margin-bottom: 3mm;
+}
+
+.section-title {
+  font-weight: bold;
+  font-size: 9pt;
+  margin-bottom: 1mm;
+  border-bottom: 1px solid #000;
+  padding-bottom: 1mm;
+}
+
+.buyer-name {
+  font-weight: bold;
+  font-size: 9pt;
+  margin-bottom: 1mm;
+}
+
+.buyer-address {
+  font-size: 8pt;
+  margin-bottom: 1mm;
+}
+
+.buyer-details span {
+  margin-right: 4mm;
+  font-size: 8pt;
+}
+
+.items-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 7pt;
+  margin-bottom: 3mm;
+}
+
+.items-table th {
+  border: 1px solid #000;
+  padding: 1.5mm;
+  text-align: center;
+  font-weight: bold;
+  background: #f0f0f0;
+}
+
+.items-table td {
+  border: 1px solid #000;
+  padding: 1mm;
+  text-align: center;
+}
+
+.items-table .product-name {
+  text-align: left;
+  padding-left: 1mm;
+}
+
+.items-table .amount {
+  text-align: right;
+  padding-right: 1mm;
+}
+
+.items-table .total {
+  font-weight: bold;
+}
+
+.summary-section {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4mm;
+}
+
+.summary-left {
+  flex: 1;
+}
+
+.summary-box {
+  border: 1px solid #000;
+  padding: 2mm;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 1mm 0;
+  font-size: 8pt;
+  border-bottom: 1px dotted #ccc;
+}
+
+.summary-row:last-child {
+  border-bottom: none;
+}
+
+.summary-row.grand-total {
+  border-top: 2px solid #000;
+  border-bottom: 2px solid #000;
+  font-weight: bold;
+  font-size: 10pt;
+  padding: 2mm 0;
+  margin-top: 1mm;
+}
+
+.summary-right {
+  flex: 0 0 40%;
+  padding-left: 4mm;
+}
+
+.amount-words {
+  font-size: 8pt;
+  font-style: italic;
+  text-transform: uppercase;
+  padding: 2mm;
+  border: 1px solid #000;
+}
+
+.bill-footer {
+  margin-top: 4mm;
+  padding-top: 3mm;
+  border-top: 1px solid #000;
+}
+
+.declaration {
+  font-size: 7pt;
+  margin-bottom: 3mm;
+  text-align: center;
+}
+
+.signature-section {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6mm;
+}
+
+.signature-box {
+  width: 45%;
+  border-top: 1px solid #000;
+  padding-top: 2mm;
+  text-align: center;
+  font-size: 8pt;
+}
+
+.signature-image {
+  max-width: 80px;
+  max-height: 40px;
+  margin-bottom: 1mm;
+}
+
+.company-name-small {
+  font-size: 7pt;
+  margin-top: 1mm;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  body {
+    margin: 0;
+    padding: 0;
+  }
+  .bill-container {
+    margin: 0;
+    padding: 6mm;
+  }
+}
+

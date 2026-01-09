@@ -1,0 +1,12 @@
+{
+  "name": "mediclone-electron",
+  "private": true,
+  "type": "commonjs",
+  "main": "../dist_electron/main.js",
+  "scripts": {
+    "typecheck": "tsc -p ../tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6"
+  }
+}

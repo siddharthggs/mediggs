@@ -1,0 +1,838 @@
+// FILE: prisma/schema.prisma
+/// ANCHOR: PrismaSchema
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Role {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  users       User[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model User {
+  id             Int       @id @default(autoincrement())
+  fullName       String
+  email          String    @unique
+  hashedPassword String
+  roleId         Int
+  isActive       Boolean   @default(true)
+  lastLoginAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  role Role @relation(fields: [roleId], references: [id])
+
+  auditLogs AuditLog[]
+  notifications Notification[]
+  billsFinalized Bill[] @relation("BillFinalizedBy")
+  billsCancelled Bill[] @relation("BillCancelledBy")
+  billTemplatesCreated BillTemplate[] @relation("BillTemplateCreatedBy")
+  billTemplatesUpdated BillTemplate[] @relation("BillTemplateUpdatedBy")
+  billTemplateVersionsCreated BillTemplateVersion[] @relation("BillTemplateVersionCreatedBy")
+  billAuditsPerformed BillAuditVersion[] @relation("BillAuditPerformedBy")
+}
+
+model Product {
+  id             Int      @id @default(autoincrement())
+  sku            String   @unique
+  name           String
+  hsnCode        String
+  packSize       String?
+  manufacturer   String?
+  drugCategory   String?
+  drugGroup      String?
+  drugContent    String?
+  unitOfMeasure  String?  // pcs, box, strip, tablet, bottle, ml, gm, kg, etc.
+  purchasePack   String?  // Purchase pack unit
+  stripQuantity  Int?     // Tablets per strip
+  barcode        String?
+  stripCode      String?
+  itemCode       String?
+  categoryId     Int?
+  subcategoryId Int?
+  companyId      Int?
+  scheduleId     Int?
+  storageTypeId  Int?
+  gstRate        Decimal  @default(0)
+  minStock       Int      @default(0)
+  maxStock       Int?
+  isBatchManaged Boolean  @default(true)
+  deletedAt      DateTime? // Soft delete timestamp
+  deletedBy      Int?      // User who deleted
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  category       Category?      @relation(fields: [categoryId], references: [id])
+  subcategory    Subcategory?  @relation(fields: [subcategoryId], references: [id])
+  company        Company?       @relation(fields: [companyId], references: [id])
+  schedule       Schedule?      @relation(fields: [scheduleId], references: [id])
+  storageType    StorageType?   @relation(fields: [storageTypeId], references: [id])
+  batches          Batch[]
+  stockLedgers     StockLedger[]
+  purchaseItems    PurchaseItem[]
+  salesItems       SalesItem[]
+  schemeItems      SchemeItem[]
+  bonusSchemeItems SchemeItem[]   @relation("BonusProduct")
+  billLines        BillLine[]
+
+  @@index([name])
+  @@index([manufacturer])
+  @@index([drugCategory])
+  @@index([drugGroup])
+  @@index([barcode])
+  @@index([stripCode])
+  @@index([itemCode])
+  @@index([sku])
+  @@index([deletedAt]) // For soft delete filtering
+  @@index([isBatchManaged]) // For batch management filtering
+}
+
+model Batch {
+  id          Int      @id @default(autoincrement())
+  productId   Int
+  godownId    Int?
+  batchNumber String
+  expiryDate  DateTime
+  mrp         Decimal
+  ptr         Decimal
+  pts         Decimal
+  taxPercent  Decimal
+  quantity    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  product       Product        @relation(fields: [productId], references: [id])
+  godown        Godown?        @relation(fields: [godownId], references: [id])
+  stockLedgers  StockLedger[]
+  purchaseItems PurchaseItem[]
+  salesItems    SalesItem[]
+  expiryReturns ExpiryReturn[]
+  billLines     BillLine[]
+
+  @@unique([productId, batchNumber], map: "uniq_batch_product")
+  @@index([batchNumber])
+  @@index([expiryDate])
+  @@index([productId, expiryDate]) // Composite index for FEFO queries
+  @@index([productId, quantity]) // For stock availability checks
+  @@index([deletedAt]) // For soft delete filtering
+}
+
+model Godown {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  location  String?
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  batches      Batch[]
+  stockLedgers StockLedger[]
+}
+
+model StockLedger {
+  id             Int      @id @default(autoincrement())
+  productId      Int
+  batchId        Int?
+  godownId       Int?
+  movementType   String   @default("PURCHASE")
+  reference      String?
+  quantityChange Int
+  balanceAfter   Int
+  narration      String?
+  createdAt      DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id])
+  batch   Batch?  @relation(fields: [batchId], references: [id])
+  godown  Godown? @relation(fields: [godownId], references: [id])
+
+  @@index([productId, createdAt])
+  @@index([batchId, createdAt]) // For batch-specific ledger queries
+  @@index([movementType, createdAt]) // For movement type filtering
+}
+
+model Supplier {
+  id                Int      @id @default(autoincrement())
+  name              String
+  gstin             String?
+  drugLicenseNumber String?  // DL No. 1
+  dlNo2             String?  // DL No. 2
+  fullAddress       String?  // Full address field
+  addressLine1      String?
+  addressLine2      String?
+  locality          String?
+  city              String?
+  state             String?
+  postalCode        String?  // Pincode
+  phone             String?
+  email             String?
+  openingBalance    Decimal  @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  purchaseInvoices PurchaseInvoice[]
+  expiryReturns   ExpiryReturn[]
+  bills           Bill[]
+
+  @@index([name])
+  @@index([gstin])
+}
+
+model PurchaseInvoice {
+  id            Int      @id @default(autoincrement())
+  invoiceNumber String
+  supplierId    Int?
+  supplierName  String
+  invoiceDate   DateTime
+  totalAmount   Decimal
+  totalTax      Decimal
+  paidAmount    Decimal  @default(0)
+  paymentStatus String   @default("UNPAID")
+  receivedAt    DateTime @default(now())
+  notes         String?
+  deletedAt     DateTime? // Soft delete timestamp
+  deletedBy     Int?      // User who deleted
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  items    PurchaseItem[]
+  supplier Supplier?      @relation(fields: [supplierId], references: [id])
+  payments Payment[]
+
+  @@index([invoiceNumber], map: "idx_purchase_invoice_number")
+  @@index([paymentStatus])
+  @@index([supplierId])
+}
+
+model PurchaseItem {
+  id                Int      @id @default(autoincrement())
+  purchaseInvoiceId Int
+  productId         Int
+  batchId           Int?
+  quantity          Int
+  freeQuantity      Int      @default(0)
+  costPrice         Decimal
+  taxPercent        Decimal
+  discountPercent   Decimal  @default(0)
+  lineTotal         Decimal
+  createdAt         DateTime @default(now())
+
+  purchaseInvoice PurchaseInvoice @relation(fields: [purchaseInvoiceId], references: [id])
+  product         Product         @relation(fields: [productId], references: [id])
+  batch           Batch?          @relation(fields: [batchId], references: [id])
+
+  @@index([productId])
+}
+
+model Customer {
+  id                Int      @id @default(autoincrement())
+  name              String
+  gstin             String?
+  drugLicenseNumber String?
+  drugLicenseNumber2 String?
+  panNumber         String?
+  addressLine1      String?
+  addressLine2      String?
+  city              String?
+  state             String?
+  stateCode         String?
+  postalCode        String?
+  phone             String?
+  email             String?
+  creditLimit       Decimal  @default(0)
+  openingBalance    Decimal  @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  salesInvoices SalesInvoice[]
+  bills         Bill[]
+
+  @@index([name])
+}
+
+model SalesInvoice {
+  id            Int       @id @default(autoincrement())
+  invoiceNumber String    @unique
+  challanNumber String?
+  orderNumber   String?
+  customerId    Int
+  mrId          Int?      // Salesman/MR ID
+  doctorId      Int?      // Doctor ID for commission
+  invoiceDate   DateTime
+  dueDate       DateTime?
+  billingType   String    @default("CASH") // CASH | CREDIT | CHALLAN
+  status        String    @default("DRAFT")
+  paymentStatus String    @default("UNPAID")
+  totalAmount   Decimal
+  totalTax      Decimal
+  roundOff      Decimal   @default(0)
+  paidAmount    Decimal   @default(0)
+  deletedAt     DateTime? // Soft delete timestamp
+  deletedBy     Int?      // User who deleted
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  notes         String?
+
+  customer      Customer        @relation(fields: [customerId], references: [id])
+  mr            MR?             @relation(fields: [mrId], references: [id])
+  doctor        Doctor?         @relation(fields: [doctorId], references: [id])
+  items         SalesItem[]
+  eInvoiceQueue EInvoiceQueue[]
+  creditNotes   CreditNote[]
+  payments      Payment[]
+
+  @@index([invoiceDate])
+  @@index([paymentStatus])
+  @@index([customerId])
+  @@index([mrId])
+  @@index([doctorId])
+  @@index([billingType])
+  @@index([deletedAt]) // For soft delete filtering
+  @@index([invoiceDate, paymentStatus]) // Composite for date + status queries
+}
+
+model SalesItem {
+  id              Int      @id @default(autoincrement())
+  salesInvoiceId  Int
+  productId       Int
+  batchId         Int?
+  quantity        Int      // Quantity in base unit (tablets if strip quantity exists)
+  soldInStrips   Boolean  @default(false) // If true, quantity is in strips
+  stripQuantity   Int?     // Tablets per strip (from product or override)
+  freeQuantity    Int      @default(0)
+  mrp             Decimal
+  salePrice       Decimal
+  taxPercent      Decimal
+  discountPercent Decimal  @default(0)
+  lineTotal       Decimal
+  createdAt       DateTime @default(now())
+
+  salesInvoice SalesInvoice @relation(fields: [salesInvoiceId], references: [id])
+  product      Product      @relation(fields: [productId], references: [id])
+  batch        Batch?       @relation(fields: [batchId], references: [id])
+
+  @@index([productId])
+}
+
+model EInvoiceQueue {
+  id             Int       @id @default(autoincrement())
+  salesInvoiceId Int
+  payloadJson    String
+  status         String    @default("PENDING") // PENDING | SENT | FAILED
+  errorMessage   String?
+  lastAttemptAt  DateTime?
+  irn            String?
+  ackNumber      String?
+  responseJson   String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  salesInvoice SalesInvoice @relation(fields: [salesInvoiceId], references: [id])
+
+  @@index([status])
+}
+
+model CreditNote {
+  id               Int      @id @default(autoincrement())
+  creditNoteNumber String   @unique
+  salesInvoiceId   Int
+  creditDate       DateTime
+  totalAmount      Decimal
+  notes            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  salesInvoice SalesInvoice @relation(fields: [salesInvoiceId], references: [id])
+
+  @@index([creditDate])
+}
+
+model Scheme {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  validFrom   DateTime
+  validTo     DateTime
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  items SchemeItem[]
+
+  @@index([validFrom, validTo])
+}
+
+model SchemeItem {
+  id               Int      @id @default(autoincrement())
+  schemeId         Int
+  productId        Int
+  purchaseQuantity Int
+  bonusQuantity    Int
+  bonusProductId   Int?
+  createdAt        DateTime @default(now())
+
+  scheme       Scheme   @relation(fields: [schemeId], references: [id], onDelete: Cascade)
+  product      Product  @relation(fields: [productId], references: [id])
+  bonusProduct Product? @relation("BonusProduct", fields: [bonusProductId], references: [id])
+
+  @@index([schemeId])
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  entity    String
+  entityId  Int?
+  action    String
+  userId    Int?
+  details   String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([entity, createdAt])
+  @@index([userId, createdAt])
+}
+
+model Payment {
+  id              Int      @id @default(autoincrement())
+  salesInvoiceId Int?
+  purchaseInvoiceId Int?
+  amount          Decimal
+  paymentDate     DateTime
+  paymentMethod   String   @default("CASH") // CASH | CHEQUE | NEFT | UPI | RTGS | BANK_TRANSFER | CARD
+  referenceNumber String?
+  // Cheque details
+  chequeNumber    String?
+  bank            String?
+  chequeIssueDate DateTime?
+  isCleared       Boolean?  // null = pending, true = cleared, false = bounced
+  clearedDate     DateTime?
+  bouncedDate     DateTime?
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  salesInvoice   SalesInvoice?   @relation(fields: [salesInvoiceId], references: [id])
+  purchaseInvoice PurchaseInvoice? @relation(fields: [purchaseInvoiceId], references: [id])
+
+  @@index([salesInvoiceId])
+  @@index([purchaseInvoiceId])
+  @@index([paymentDate])
+  @@index([paymentMethod])
+  @@index([isCleared])
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  type      String   // LOW_STOCK | EXPIRY | SYSTEM | SUCCESS | ERROR
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  userId    Int?
+  entity    String?
+  entityId  Int?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId, isRead])
+  @@index([type, createdAt])
+}
+
+model MR {
+  id          Int      @id @default(autoincrement())
+  name        String
+  code        String?  @unique
+  phone       String?
+  email       String?
+  address     String?
+  commissionPercent Decimal @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  salesInvoices SalesInvoice[]
+  bills         Bill[]
+
+  @@index([name])
+  @@index([code])
+}
+
+model Doctor {
+  id          Int      @id @default(autoincrement())
+  name        String
+  code        String?  @unique
+  phone       String?
+  email       String?
+  address     String?
+  commissionPercent Decimal @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  salesInvoices SalesInvoice[]
+  bills         Bill[]
+
+  @@index([name])
+  @@index([code])
+}
+
+model Category {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products      Product[]
+  subcategories Subcategory[]
+
+  @@index([name])
+}
+
+model Subcategory {
+  id          Int      @id @default(autoincrement())
+  categoryId  Int
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  category Category @relation(fields: [categoryId], references: [id])
+  products  Product[]
+
+  @@unique([categoryId, name])
+  @@index([name])
+}
+
+model Company {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products Product[]
+
+  @@index([name])
+}
+
+model Schedule {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique // H, H1, G, etc.
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products Product[]
+
+  @@index([name])
+}
+
+model StorageType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products Product[]
+
+  @@index([name])
+}
+
+model ExpiryReturn {
+  id          Int      @id @default(autoincrement())
+  returnNumber String  @unique
+  returnDate   DateTime
+  supplierId   Int?
+  batchId      Int
+  quantity     Int
+  lossAmount   Decimal
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  supplier Supplier? @relation(fields: [supplierId], references: [id])
+  batch    Batch     @relation(fields: [batchId], references: [id])
+
+  @@index([returnDate])
+  @@index([supplierId])
+  @@index([batchId])
+}
+
+// Billing System Models
+model Bill {
+  id            Int      @id @default(autoincrement())
+  billNumber    String   @unique
+  billType      String   // SALES | PURCHASE | CREDIT_NOTE
+  billDate      DateTime
+  dueDate       DateTime?
+  status        String   @default("DRAFT") // DRAFT | FINALIZED | CANCELLED
+  paymentStatus String   @default("UNPAID") // UNPAID | PARTIAL | PAID
+  billingType   String?  // CASH | CREDIT | CHALLAN (for sales)
+  
+  // Party information
+  customerId    Int?
+  supplierId    Int?
+  customerName  String?
+  supplierName  String?
+  customerGstin String?
+  supplierGstin String?
+  customerAddress String?
+  supplierAddress String?
+  customerPhone String?
+  supplierPhone String?
+  
+  // MR/Doctor (for sales)
+  mrId          Int?
+  doctorId      Int?
+  
+  // Totals
+  subtotal      Decimal  @default(0)
+  totalDiscount Decimal  @default(0)
+  totalTax      Decimal  @default(0)
+  cgstTotal     Decimal  @default(0)
+  sgstTotal     Decimal  @default(0)
+  igstTotal     Decimal  @default(0)
+  roundOff      Decimal  @default(0)
+  totalAmount   Decimal  @default(0)
+  paidAmount    Decimal  @default(0)
+  
+  // Additional fields
+  challanNumber String?
+  orderNumber   String?
+  remarks       String?
+  notes         String?
+  
+  // Template
+  templateId    Int?
+  
+  // Audit
+  finalizedAt   DateTime?
+  finalizedBy   Int?
+  cancelledAt   DateTime?
+  cancelledBy   Int?
+  cancellationReason String?
+  deletedAt     DateTime? // Soft delete timestamp
+  deletedBy     Int?      // User who deleted
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  customer      Customer?  @relation(fields: [customerId], references: [id])
+  supplier      Supplier? @relation(fields: [supplierId], references: [id])
+  mr            MR?        @relation(fields: [mrId], references: [id])
+  doctor        Doctor?    @relation(fields: [doctorId], references: [id])
+  template      BillTemplate? @relation(fields: [templateId], references: [id])
+  finalizedByUser User?    @relation("BillFinalizedBy", fields: [finalizedBy], references: [id])
+  cancelledByUser User?    @relation("BillCancelledBy", fields: [cancelledBy], references: [id])
+  
+  lines         BillLine[]
+  payments      BillPayment[]
+  auditVersions BillAuditVersion[]
+
+  @@index([billNumber])
+  @@index([billType])
+  @@index([billDate])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([customerId])
+  @@index([supplierId])
+  @@index([templateId])
+  @@index([deletedAt]) // For soft delete filtering
+  @@index([billDate, status]) // Composite for date + status queries
+  @@index([status, paymentStatus]) // Composite for status filtering
+}
+
+model BillLine {
+  id              Int      @id @default(autoincrement())
+  billId          Int
+  lineNumber      Int      // Order in the bill
+  productId       Int
+  batchId         Int?
+  
+  // Product details (snapshot at time of bill)
+  productName     String
+  hsnCode         String
+  manufacturer    String?
+  packSize        String?
+  unitOfMeasure   String?
+  
+  // Batch details
+  batchNumber     String?
+  expiryDate      DateTime?
+  
+  // Quantities
+  quantity        Int
+  freeQuantity    Int      @default(0)
+  soldInStrips    Boolean  @default(false)
+  stripQuantity   Int?
+  
+  // Pricing
+  mrp             Decimal
+  ptr             Decimal
+  pts             Decimal?
+  rate            Decimal  // Actual selling/buying rate
+  discountPercent Decimal  @default(0)
+  discountAmount  Decimal  @default(0)
+  
+  // Tax
+  taxPercent      Decimal
+  cgstPercent     Decimal  @default(0)
+  sgstPercent     Decimal  @default(0)
+  igstPercent     Decimal  @default(0)
+  cgstAmount      Decimal  @default(0)
+  sgstAmount      Decimal  @default(0)
+  igstAmount      Decimal  @default(0)
+  
+  // Totals
+  taxableAmount   Decimal
+  lineTotal       Decimal
+  
+  // Saving calculation
+  savingPercent   Decimal? // ((MRP - PTR) / MRP) * 100
+  savingValue     Decimal? // (MRP - PTR) * quantity
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  bill            Bill     @relation(fields: [billId], references: [id], onDelete: Cascade)
+  product         Product  @relation(fields: [productId], references: [id])
+  batch           Batch?   @relation(fields: [batchId], references: [id])
+
+  @@index([billId])
+  @@index([productId])
+  @@index([batchId])
+}
+
+model BillTemplate {
+  id            Int      @id @default(autoincrement())
+  name          String
+  description   String?
+  templateType  String   @default("A4") // A4 | THERMAL_3INCH
+  isDefault     Boolean  @default(false)
+  version       Int      @default(1)
+  
+  // Template content (legacy + advanced)
+  htmlContent   String   // HTML template with placeholders
+  cssContent    String   // CSS styles
+
+  // Visual layout source of truth
+  layoutJson    Json?
+  generatedHtml String?
+  editorMode    String   @default("VISUAL") // VISUAL | ADVANCED | LEGACY
+  
+  // Metadata
+  placeholders  String?  // JSON array of available placeholders
+  isActive      Boolean  @default(true)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  createdBy     Int?
+  updatedBy     Int?
+
+  createdByUser User?    @relation("BillTemplateCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User?    @relation("BillTemplateUpdatedBy", fields: [updatedBy], references: [id])
+  
+  bills         Bill[]
+  versions      BillTemplateVersion[]
+
+  @@index([templateType])
+  @@index([isDefault])
+  @@index([isActive])
+}
+
+model BillTemplateVersion {
+  id            Int      @id @default(autoincrement())
+  templateId    Int
+  version       Int
+  htmlContent   String
+  cssContent    String
+  // Snapshots of visual layout state at this version (if any)
+  layoutJson    String?
+  generatedHtml String?
+  changeNotes   String?
+  createdAt     DateTime @default(now())
+  createdBy     Int?
+
+  template      BillTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  createdByUser User?        @relation("BillTemplateVersionCreatedBy", fields: [createdBy], references: [id])
+
+  @@unique([templateId, version])
+  @@index([templateId])
+}
+
+model BillPayment {
+  id            Int      @id @default(autoincrement())
+  billId        Int
+  amount        Decimal
+  paymentDate   DateTime
+  paymentMethod String   @default("CASH") // CASH | CHEQUE | NEFT | UPI | RTGS | BANK_TRANSFER | CARD
+  referenceNumber String?
+  
+  // Cheque details
+  chequeNumber  String?
+  bank          String?
+  chequeIssueDate DateTime?
+  isCleared     Boolean?
+  clearedDate   DateTime?
+  bouncedDate   DateTime?
+  
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  bill          Bill     @relation(fields: [billId], references: [id], onDelete: Cascade)
+
+  @@index([billId])
+  @@index([paymentDate])
+  @@index([paymentMethod])
+}
+
+model BillAuditVersion {
+  id            Int      @id @default(autoincrement())
+  billId        Int
+  version       Int
+  action        String   // CREATE | UPDATE | FINALIZE | CANCEL | PAYMENT
+  changesJson   String?  // JSON diff of changes
+  performedBy   Int?
+  performedAt   DateTime @default(now())
+  notes         String?
+
+  bill          Bill     @relation(fields: [billId], references: [id], onDelete: Cascade)
+  performedByUser User?   @relation("BillAuditPerformedBy", fields: [performedBy], references: [id])
+
+  @@index([billId])
+  @@index([version])
+  @@index([performedAt])
+}
+
+model CompanyInfo {
+  id          Int      @id @default(autoincrement())
+  companyName String
+  address     String?
+  phone       String?
+  email       String?
+  gstNumber   String?
+  dlNumber1   String?
+  dlNumber2   String?
+  fssaiNumber String?
+  cinPan      String?
+  logoPath    String?
+  signPath    String?
+  state       String?
+  stateCode   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([companyName])
+}

@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>GST Invoice - {{companyName}}</title>
+  <style type="text/css">
+    /* CSS will be injected here */
+    /* {{! Template will inject CSS here }} */
+  </style>
+  {{#if cssContent}}
+  <style type="text/css">
+    /* GST Invoice Template */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  font-size: 9pt;
+  color: #000;
+}
+
+.bill-container {
+  width: 210mm;
+  min-height: 297mm;
+  padding: 8mm;
+  margin: 0 auto;
+}
+
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 2px solid #000;
+  padding-bottom: 4mm;
+  margin-bottom: 4mm;
+}
+
+.seller-info {
+  flex: 1;
+}
+
+.logo {
+  max-width: 100px;
+  max-height: 50px;
+  margin-bottom: 2mm;
+}
+
+.company-name {
+  font-size: 15pt;
+  font-weight: bold;
+  margin-bottom: 1.5mm;
+  text-transform: uppercase;
+}
+
+.address {
+  font-size: 8pt;
+  margin-bottom: 1mm;
+  line-height: 1.4;
+}
+
+.contact-info,
+.tax-info,
+.license-info {
+  font-size: 8pt;
+  margin-bottom: 0.5mm;
+}
+
+.state-info {
+  font-size: 8pt;
+  font-weight: 600;
+  margin-top: 1mm;
+}
+
+.invoice-header {
+  text-align: right;
+}
+
+.invoice-title {
+  font-size: 18pt;
+  font-weight: bold;
+  margin-bottom: 2mm;
+  text-transform: uppercase;
+}
+
+.invoice-type {
+  font-size: 9pt;
+  font-weight: bold;
+  border: 1px solid #000;
+  padding: 1mm 3mm;
+  display: inline-block;
+  margin-bottom: 2mm;
+}
+
+.invoice-number,
+.invoice-date,
+.due-date {
+  font-size: 8pt;
+  margin-bottom: 1mm;
+}
+
+.buyer-info-section {
+  border: 1px solid #000;
+  padding: 2mm;
+  margin-bottom: 3mm;
+}
+
+.buyer-label {
+  font-weight: bold;
+  font-size: 9pt;
+  margin-bottom: 1mm;
+  border-bottom: 1px solid #000;
+  padding-bottom: 1mm;
+}
+
+.buyer-name {
+  font-weight: bold;
+  font-size: 9pt;
+  margin-bottom: 1mm;
+}
+
+.buyer-address {
+  font-size: 8pt;
+  margin-bottom: 1mm;
+}
+
+.buyer-contact,
+.buyer-license {
+  font-size: 8pt;
+}
+
+.product-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 8pt;
+  margin-bottom: 4mm;
+}
+
+.product-table th {
+  border: 1px solid #000;
+  padding: 2mm;
+  background: #f0f0f0;
+  font-weight: bold;
+  text-align: center;
+}
+
+.product-table td {
+  border: 1px solid #000;
+  padding: 1.5mm;
+  text-align: center;
+}
+
+.product-desc {
+  text-align: left;
+  padding-left: 2mm;
+}
+
+.product-desc small {
+  font-size: 7pt;
+  color: #666;
+}
+
+.amount {
+  text-align: right;
+  padding-right: 2mm;
+}
+
+.summary-container {
+  display: flex;
+  gap: 4mm;
+  margin-bottom: 4mm;
+}
+
+.summary-left {
+  flex: 1;
+}
+
+.gst-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 8pt;
+}
+
+.gst-table th,
+.gst-table td {
+  border: 1px solid #000;
+  padding: 1.5mm;
+  text-align: right;
+}
+
+.gst-table th {
+  background: #f0f0f0;
+  font-weight: bold;
+  text-align: center;
+}
+
+.gst-table td:first-child {
+  text-align: center;
+}
+
+.summary-right {
+  flex: 0 0 40%;
+}
+
+.totals {
+  border: 2px solid #000;
+  padding: 3mm;
+}
+
+.total-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 1.5mm 0;
+  font-size: 9pt;
+  border-bottom: 1px dotted #ccc;
+}
+
+.total-item.grand {
+  border-top: 2px solid #000;
+  border-bottom: 2px solid #000;
+  font-weight: bold;
+  font-size: 11pt;
+  margin-top: 2mm;
+  padding: 2mm 0;
+}
+
+.amount-words {
+  margin-top: 2mm;
+  font-size: 8pt;
+  font-style: italic;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 2mm;
+  border: 1px solid #000;
+}
+
+.footer {
+  margin-top: 4mm;
+  padding-top: 3mm;
+  border-top: 1px solid #000;
+}
+
+.declaration {
+  font-size: 7.5pt;
+  text-align: center;
+  margin-bottom: 4mm;
+}
+
+.signature-area {
+  text-align: center;
+}
+
+.signature {
+  display: inline-block;
+  width: 45%;
+  border-top: 1px solid #000;
+  padding-top: 2mm;
+}
+
+.sig-img {
+  max-width: 80px;
+  max-height: 40px;
+  margin-bottom: 1mm;
+}
+
+.for-company {
+  font-size: 7pt;
+  margin-top: 1mm;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  body {
+    margin: 0;
+    padding: 0;
+  }
+  .bill-container {
+    margin: 0;
+    padding: 8mm;
+  }
+}
+
+
+  </style>
+  {{/if}}
+</head>
+<body>
+  <div class="bill-container">
+    <!-- Header -->
+    <div class="header-section">
+      <div class="seller-info">
+        {{#if logoPath}}<img src="{{logoPath}}" alt="Logo" class="logo" />{{/if}}
+        <div class="company-name">{{companyName}}</div>
+        <div class="address">{{address}}</div>
+        <div class="contact-info">
+          {{#if phone}}Ph: {{phone}}{{/if}} | {{#if email}}Email: {{email}}{{/if}}
+        </div>
+        <div class="tax-info">
+          {{#if gstin}}GSTIN: {{gstin}}{{/if}} | {{#if fssaiNumber}}FSSAI: {{fssaiNumber}}{{/if}}
+        </div>
+        <div class="license-info">
+          {{#if dlNo1}}DL: {{dlNo1}}{{/if}}{{#if dlNo2}}, {{dlNo2}}{{/if}}
+        </div>
+        {{#if state}}<div class="state-info">{{state}} - {{stateCode}}</div>{{/if}}
+      </div>
+      <div class="invoice-header">
+        <div class="invoice-title">TAX INVOICE</div>
+        <div class="invoice-type">ORIGINAL</div>
+        <div class="invoice-number">Invoice No: {{billNumber}}</div>
+        <div class="invoice-date">Date: {{billDate}}</div>
+        {{#if dueDate}}<div class="due-date">Due Date: {{dueDate}}</div>{{/if}}
+      </div>
+    </div>
+
+    <!-- Buyer Info -->
+    {{#if customerName}}
+    <div class="buyer-info-section">
+      <div class="buyer-label">Bill To:</div>
+      <div class="buyer-details">
+        <div class="buyer-name">{{customerName}}</div>
+        {{#if customerAddress}}<div class="buyer-address">{{customerAddress}}</div>{{/if}}
+        <div class="buyer-contact">
+          {{#if customerPhone}}Ph: {{customerPhone}}{{/if}}
+          {{#if customerGstin}} | GSTIN: {{customerGstin}}{{/if}}
+        </div>
+        {{#if customerDlNo}}<div class="buyer-license">DL: {{customerDlNo}}</div>{{/if}}
+      </div>
+    </div>
+    {{/if}}
+
+    <!-- Product Table -->
+    <table class="product-table">
+      <thead>
+        <tr>
+          <th>S.No</th>
+          <th>HSN</th>
+          <th>Description</th>
+          <th>Qty</th>
+          <th>Rate</th>
+          <th>Taxable</th>
+          <th>CGST</th>
+          <th>SGST</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each lines}}
+        <tr>
+          <td>{{lineNumber}}</td>
+          <td>{{hsnCode}}</td>
+          <td class="product-desc">{{productName}}<br/>
+            <small>Batch: {{batchNumber}} | Exp: {{expiryDate}}</small>
+          </td>
+          <td>{{quantity}}</td>
+          <td class="amount">{{formatCurrency rate}}</td>
+          <td class="amount">{{formatCurrency taxableAmount}}</td>
+          <td class="amount">{{formatCurrency cgstAmount}}</td>
+          <td class="amount">{{formatCurrency sgstAmount}}</td>
+          <td class="amount">{{formatCurrency lineTotal}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+
+    <!-- Summary -->
+    <div class="summary-container">
+      <div class="summary-left">
+        <div class="gst-breakdown">
+          <table class="gst-table">
+            <thead>
+              <tr>
+                <th>Rate</th>
+                <th>Taxable</th>
+                <th>CGST</th>
+                <th>SGST</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#each gstSummary}}
+              <tr>
+                <td>{{rate}}%</td>
+                <td>{{formatCurrency taxable}}</td>
+                <td>{{formatCurrency cgst}}</td>
+                <td>{{formatCurrency sgst}}</td>
+                <td>{{formatCurrency total}}</td>
+              </tr>
+              {{/each}}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="summary-right">
+        <div class="totals">
+          <div class="total-item">
+            <span>Taxable Amount:</span>
+            <span>{{formatCurrency taxableAmount}}</span>
+          </div>
+          <div class="total-item">
+            <span>CGST:</span>
+            <span>{{formatCurrency cgstTotal}}</span>
+          </div>
+          <div class="total-item">
+            <span>SGST:</span>
+            <span>{{formatCurrency sgstTotal}}</span>
+          </div>
+          {{#if igstTotal}}
+          <div class="total-item">
+            <span>IGST:</span>
+            <span>{{formatCurrency igstTotal}}</span>
+          </div>
+          {{/if}}
+          <div class="total-item grand">
+            <span>Total:</span>
+            <span>{{formatCurrency totalAmount}}</span>
+          </div>
+          <div class="amount-words">
+            Amount in Words: {{numberToWords totalAmount}}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div class="declaration">
+        Certified that the particulars given above are true & correct and amount indicated represents the price actually charged.
+      </div>
+      <div class="signature-area">
+        <div class="signature">
+          {{#if signaturePath}}<img src="{{signaturePath}}" alt="Signature" class="sig-img" />{{/if}}
+          <div>Authorised Signatory</div>
+          <div class="for-company">For {{companyName}}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
